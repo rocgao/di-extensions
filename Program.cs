@@ -19,36 +19,47 @@ namespace SomeTest
             // var py = PinyinHelper.ToHanyuPinyinStringArray('f', _pyFormat);
             // var f = py.FirstOrDefault()?.FirstOrDefault();
 
-            var namedFoos = new Dictionary<string, Type>()
-            {
-                {"A",typeof(FooA)},
-                {"B",typeof(FooB)},
-            };
+            // var namedFoos = new Dictionary<string, Type>()
+            // {
+            //     {"A",typeof(FooA)},
+            //     {"B",typeof(FooB)},
+            // };
 
-            var namedBoos = new Dictionary<string, Type>()
-            {
-                {"A1",typeof(BooA)},
-                {"B1",typeof(BooB)},
-            };
+            // var namedBoos = new Dictionary<string, Type>()
+            // {
+            //     {"A1",typeof(BooA)},
+            //     {"B1",typeof(BooB)},
+            // };
+            // var sp = new ServiceCollection()
+            //     .AddNamedService<IFoo>(ServiceLifetime.Transient, namedFoos, typeof(FooC))
+            //     .AddNamedService<IBoo>(ServiceLifetime.Singleton, namedBoos)
+            //     .BuildServiceProvider();
+            // for (int i = 0; i < 2; i++)
+            // {
+            //     var fooB = sp.GetNamedService<IFoo>("B");
+            //     var fooA = sp.GetNamedService<IFoo>("A");
+            //     var fooDef = sp.GetNamedService<IFoo>("");
+
+            //     var booB = sp.GetNamedService<IBoo>("B1");
+            //     var booA = sp.GetNamedService<IBoo>("A1");
+            //     var booDef = sp.GetNamedService<IBoo>("C1");
+            // }
+
             var sp = new ServiceCollection()
-                .AddNamedService<IFoo>(ServiceLifetime.Transient, namedFoos, typeof(FooC))
-                .AddNamedService<IBoo>(ServiceLifetime.Singleton, namedBoos)
+                .AddParameterizedService<IFoo, ParameterizedFoo>()
                 .BuildServiceProvider();
-            for (int i = 0; i < 2; i++)
-            {
-                var fooB = sp.GetNamedService<IFoo>("B");
-                var fooA = sp.GetNamedService<IFoo>("A");
-                var fooDef = sp.GetNamedService<IFoo>("");
+            var foo = sp.GetParameterizedService<IFoo>(new Dictionary<string, object>(){
+                {"name","gaopeng"},
+                {"age",182},
+                // {"attrs",new string[]{"a1","b2"}}
+            });
 
-                var booB = sp.GetNamedService<IBoo>("B1");
-                var booA = sp.GetNamedService<IBoo>("A1");
-                var booDef = sp.GetNamedService<IBoo>("C1");
-            }
-
-            Console.WriteLine("Hello World!");
+            var foo3 = sp.GetParameterizedService<IFoo>(new Dictionary<string, object>(){
+                {"name","gaopeng1"},
+                {"age",13},
+                {"attrs",new string[]{"c1","c2"}}
+            });
         }
-
-
     }
 
     public interface IFoo
@@ -104,6 +115,26 @@ namespace SomeTest
         public BooC()
         {
             Console.WriteLine("new BooC");
+        }
+    }
+
+    public class ParameterizedFoo : IFoo
+    {
+        private readonly string name;
+        private readonly int age;
+        private readonly string[] attrs;
+
+        public ParameterizedFoo(string name, int age, string[] attrs)
+        {
+            this.name = name;
+            this.age = age;
+            this.attrs = attrs;
+        }
+
+        public ParameterizedFoo(string name, int age)
+        {
+            this.name = name;
+            this.age = age;
         }
     }
 }
