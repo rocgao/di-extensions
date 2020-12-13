@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace SomeTest
 {
-    public class ParameterizedServiceResolver<T>
+    internal class ParameterizedServiceResolver<T>
     {
         private class Constructor
         {
@@ -84,9 +84,26 @@ namespace SomeTest
             return services;
         }
 
+        public static IServiceCollection AddNamedParameterizedService<TService>(this IServiceCollection services, IDictionary<string, Type> impls, Type defaultImpl = null)
+        {
+            var instances = new Dictionary<string, object>();
+            foreach (var kvp in impls)
+            {
+                instances.Add(kvp.Key, new ParameterizedServiceResolver<TService>(kvp.Value));
+            }
+            services.AddNamedInstance<ParameterizedServiceResolver<TService>>(instances);
+            return services;
+        }
+
         public static TService GetParameterizedService<TService>(this IServiceProvider serviceProvider, IDictionary<string, object> parameters)
         {
             var resolver = serviceProvider.GetService<ParameterizedServiceResolver<TService>>();
+            return resolver.Resolve(serviceProvider, parameters);
+        }
+
+        public static TService GetNamedParameterizedService<TService>(this IServiceProvider serviceProvider, string name, IDictionary<string, object> parameters)
+        {
+            var resolver = serviceProvider.GetNamedInstance<ParameterizedServiceResolver<TService>>(name);
             return resolver.Resolve(serviceProvider, parameters);
         }
     }

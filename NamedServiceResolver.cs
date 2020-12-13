@@ -5,20 +5,40 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace SomeTest
 {
-    public class NamedServiceResolver<T>
+    internal class NamedInstanceResolver<T>
     {
-        private readonly IServiceProvider serviceProvider;
+        private readonly IDictionary<string, object> instances;
+        private readonly object defaultInstance;
+
+        public NamedInstanceResolver(IDictionary<string, object> instances, object defaultInstance)
+        {
+            this.instances = instances;
+            this.defaultInstance = defaultInstance;
+        }
+
+        public T Resolve(IServiceProvider serviceProvider, string name)
+        {
+            if (instances.TryGetValue(name, out var v))
+            {
+                return (T)v;
+            }
+
+            return (T)defaultInstance;
+        }
+    }
+    internal class NamedServiceResolver<T>
+    {
         private readonly IDictionary<string, Type> impls;
         private readonly Type defaultImpl;
 
-        public NamedServiceResolver(IServiceProvider serviceProvider, IDictionary<string, Type> impls, Type defaultImpl)
+
+        public NamedServiceResolver(IDictionary<string, Type> impls, Type defaultImpl)
         {
-            this.serviceProvider = serviceProvider;
             this.impls = impls;
             this.defaultImpl = defaultImpl;
         }
 
-        public T Resolve(string name)
+        public T Resolve(IServiceProvider serviceProvider, string name)
         {
             if (impls.TryGetValue(name, out var v))
             {
@@ -48,15 +68,25 @@ namespace SomeTest
                 services.TryAdd(new ServiceDescriptor(defaultImpl, defaultImpl, lifetime));
             }
 
-            var tDescriptor = new ServiceDescriptor(typeof(NamedServiceResolver<T>), p => new NamedServiceResolver<T>(p, impls, defaultImpl), ServiceLifetime.Singleton);
-            services.Add(tDescriptor);
+            services.AddSingleton<NamedServiceResolver<T>>(new NamedServiceResolver<T>(impls, defaultImpl));
 
+            return services;
+        }
+
+        public static IServiceCollection AddNamedInstance<T>(this IServiceCollection services, IDictionary<string, object> instances, object defaultInstance = null)
+        {
+            services.AddSingleton<NamedInstanceResolver<T>>(new NamedInstanceResolver<T>(instances, defaultInstance));
             return services;
         }
         public static T GetNamedService<T>(this IServiceProvider serviceProvider, string name)
         {
             var namedServiceResolver = serviceProvider.GetService<NamedServiceResolver<T>>();
-            return namedServiceResolver.Resolve(name);
+            return namedServiceResolver.Resolve(serviceProvider, name);
+        }
+        public static T GetNamedInstance<T>(this IServiceProvider serviceProvider, string name)
+        {
+            var namedInstanceResolver = serviceProvider.GetService<NamedInstanceResolver<T>>();
+            return namedInstanceResolver.Resolve(serviceProvider, name);
         }
     }
 }

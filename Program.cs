@@ -19,21 +19,22 @@ namespace SomeTest
             // var py = PinyinHelper.ToHanyuPinyinStringArray('f', _pyFormat);
             // var f = py.FirstOrDefault()?.FirstOrDefault();
 
-            // var namedFoos = new Dictionary<string, Type>()
-            // {
-            //     {"A",typeof(FooA)},
-            //     {"B",typeof(FooB)},
-            // };
+            var namedFoos = new Dictionary<string, Type>()
+            {
+                {"A",typeof(FooA)},
+                {"B",typeof(FooB)},
+            };
 
-            // var namedBoos = new Dictionary<string, Type>()
-            // {
-            //     {"A1",typeof(BooA)},
-            //     {"B1",typeof(BooB)},
-            // };
-            // var sp = new ServiceCollection()
-            //     .AddNamedService<IFoo>(ServiceLifetime.Transient, namedFoos, typeof(FooC))
-            //     .AddNamedService<IBoo>(ServiceLifetime.Singleton, namedBoos)
-            //     .BuildServiceProvider();
+            var namedBoos = new Dictionary<string, Type>()
+            {
+                {"A1",typeof(BooA)},
+                {"B1",typeof(BooB)},
+            };
+            var sp = new ServiceCollection()
+                // .AddNamedService<IFoo>(ServiceLifetime.Transient, namedFoos, typeof(FooC))
+                // .AddNamedService<IBoo>(ServiceLifetime.Singleton, namedBoos)
+                .AddNamedParameterizedService<IFoo>(namedFoos, typeof(FooC))
+                .BuildServiceProvider();
             // for (int i = 0; i < 2; i++)
             // {
             //     var fooB = sp.GetNamedService<IFoo>("B");
@@ -45,20 +46,22 @@ namespace SomeTest
             //     var booDef = sp.GetNamedService<IBoo>("C1");
             // }
 
-            var sp = new ServiceCollection()
-                .AddParameterizedService<IFoo, ParameterizedFoo>()
-                .BuildServiceProvider();
-            var foo = sp.GetParameterizedService<IFoo>(new Dictionary<string, object>(){
-                {"name","gaopeng"},
-                {"age",182},
-                // {"attrs",new string[]{"a1","b2"}}
-            });
+            var fooB = sp.GetNamedParameterizedService<IFoo>("A", new Dictionary<string, object>() { { "name", "gaopeng" } });
 
-            var foo3 = sp.GetParameterizedService<IFoo>(new Dictionary<string, object>(){
-                {"name","gaopeng1"},
-                {"age",13},
-                {"attrs",new string[]{"c1","c2"}}
-            });
+            // var sp = new ServiceCollection()
+            //     .AddParameterizedService<IFoo, ParameterizedFoo>()
+            //     .BuildServiceProvider();
+            // var foo = sp.GetParameterizedService<IFoo>(new Dictionary<string, object>(){
+            //     {"name","gaopeng"},
+            //     {"age",182},
+            //     // {"attrs",new string[]{"a1","b2"}}
+            // });
+
+            // var foo3 = sp.GetParameterizedService<IFoo>(new Dictionary<string, object>(){
+            //     {"name","gaopeng1"},
+            //     {"age",13},
+            //     {"attrs",new string[]{"c1","c2"}}
+            // });
         }
     }
 
@@ -69,24 +72,24 @@ namespace SomeTest
 
     public class FooA : IFoo
     {
-        public FooA()
+        public FooA(string name)
         {
-            Console.WriteLine("new FooA");
+            Console.WriteLine($"new FooA with {name}");
         }
     }
 
     public class FooB : IFoo
     {
-        public FooB()
+        public FooB(int age)
         {
-            Console.WriteLine("new FooB");
+            Console.WriteLine($"new FooB with {age}");
         }
     }
     public class FooC : IFoo
     {
-        public FooC()
+        public FooC(decimal amount)
         {
-            Console.WriteLine("new FooC");
+            Console.WriteLine($"new FooC with {amount}");
         }
     }
 
